@@ -19,6 +19,8 @@ public sealed class GitOptions
 {
     public bool Enabled { get; set; } = true;
 
+    public string ExecutablePath { get; set; } = "git";
+
     public bool PullBeforePush { get; set; } = true;
 
     public string RemoteName { get; set; } = "origin";

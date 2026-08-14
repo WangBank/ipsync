@@ -55,6 +55,12 @@ Run PowerShell as Administrator:
 
 The service name is `IpSync`.
 
+For GitHub push over HTTPS, install the service with the same Windows account that has your GitHub credential:
+
+```powershell
+.\scripts\install-service.ps1 -RunAsCurrentUser
+```
+
 The install script configures:
 
 - Delayed automatic startup after Windows boots.
