@@ -31,6 +31,125 @@ function Set-IpSyncServiceResilience {
     & sc.exe failureflag $Name 1 | Out-Host
 }
 
+function Grant-LogonAsServiceRight {
+    param(
+        [string]$AccountName
+    )
+
+    $normalizedAccountName = if ($AccountName.StartsWith(".\", [StringComparison]::Ordinal)) {
+        "$env:COMPUTERNAME\$($AccountName.Substring(2))"
+    } else {
+        $AccountName
+    }
+
+    if (-not ([System.Management.Automation.PSTypeName]"IpSync.ServiceLogonRight").Type) {
+        Add-Type -TypeDefinition @"
+using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
+using System.Security.Principal;
+
+namespace IpSync
+{
+    public static class ServiceLogonRight
+    {
+        private const uint POLICY_CREATE_ACCOUNT = 0x00000010;
+        private const uint POLICY_LOOKUP_NAMES = 0x00000800;
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct LSA_OBJECT_ATTRIBUTES
+        {
+            public uint Length;
+            public IntPtr RootDirectory;
+            public IntPtr ObjectName;
+            public uint Attributes;
+            public IntPtr SecurityDescriptor;
+            public IntPtr SecurityQualityOfService;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        private struct LSA_UNICODE_STRING
+        {
+            public ushort Length;
+            public ushort MaximumLength;
+            public IntPtr Buffer;
+        }
+
+        [DllImport("advapi32.dll", PreserveSig = true)]
+        private static extern uint LsaOpenPolicy(
+            IntPtr systemName,
+            ref LSA_OBJECT_ATTRIBUTES objectAttributes,
+            uint desiredAccess,
+            out IntPtr policyHandle);
+
+        [DllImport("advapi32.dll", PreserveSig = true)]
+        private static extern uint LsaAddAccountRights(
+            IntPtr policyHandle,
+            byte[] accountSid,
+            LSA_UNICODE_STRING[] userRights,
+            uint countOfRights);
+
+        [DllImport("advapi32.dll")]
+        private static extern uint LsaClose(IntPtr policyHandle);
+
+        [DllImport("advapi32.dll")]
+        private static extern uint LsaNtStatusToWinError(uint status);
+
+        public static void Grant(string accountName)
+        {
+            var sid = (SecurityIdentifier)new NTAccount(accountName).Translate(typeof(SecurityIdentifier));
+            var sidBytes = new byte[sid.BinaryLength];
+            sid.GetBinaryForm(sidBytes, 0);
+
+            var attributes = new LSA_OBJECT_ATTRIBUTES();
+            var status = LsaOpenPolicy(
+                IntPtr.Zero,
+                ref attributes,
+                POLICY_CREATE_ACCOUNT | POLICY_LOOKUP_NAMES,
+                out var policyHandle);
+
+            ThrowIfFailed(status);
+
+            try
+            {
+                var rights = new[] { CreateLsaString("SeServiceLogonRight") };
+                status = LsaAddAccountRights(policyHandle, sidBytes, rights, 1);
+                ThrowIfFailed(status);
+            }
+            finally
+            {
+                LsaClose(policyHandle);
+            }
+        }
+
+        private static LSA_UNICODE_STRING CreateLsaString(string value)
+        {
+            return new LSA_UNICODE_STRING
+            {
+                Length = (ushort)(value.Length * 2),
+                MaximumLength = (ushort)((value.Length + 1) * 2),
+                Buffer = Marshal.StringToHGlobalUni(value)
+            };
+        }
+
+        private static void ThrowIfFailed(uint status)
+        {
+            if (status == 0)
+            {
+                return;
+            }
+
+            throw new Win32Exception((int)LsaNtStatusToWinError(status));
+        }
+    }
+}
+"@
+    }
+
+    Write-Host "Granting 'Log on as a service' to $normalizedAccountName."
+    [IpSync.ServiceLogonRight]::Grant($normalizedAccountName)
+}
+
 function New-IpSyncService {
     param(
         [string]$Name,
@@ -51,6 +170,10 @@ function New-IpSyncService {
     }
 
     New-Service @serviceArgs
+}
+
+if ($Credential) {
+    Grant-LogonAsServiceRight -AccountName $Credential.UserName
 }
 
 $existing = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
