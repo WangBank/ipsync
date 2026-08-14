@@ -8,11 +8,11 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$publishDirectory = Resolve-Path $PublishDirectory
-$exePath = Join-Path $publishDirectory.Path "IpSync.exe"
+$publishDirectory = Convert-Path -LiteralPath $PublishDirectory
+$exePath = Join-Path -Path $publishDirectory -ChildPath "IpSync.exe"
 
 if (-not (Test-Path -LiteralPath $exePath)) {
-    throw "IpSync.exe was not found in $($publishDirectory.Path). Run scripts\publish.ps1 first."
+    throw "IpSync.exe was not found in $publishDirectory. Run scripts\publish.ps1 first."
 }
 
 if ($RunAsCurrentUser -and -not $Credential) {
