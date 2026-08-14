@@ -102,11 +102,12 @@ namespace IpSync
             sid.GetBinaryForm(sidBytes, 0);
 
             var attributes = new LSA_OBJECT_ATTRIBUTES();
+            IntPtr policyHandle;
             var status = LsaOpenPolicy(
                 IntPtr.Zero,
                 ref attributes,
                 POLICY_CREATE_ACCOUNT | POLICY_LOOKUP_NAMES,
-                out var policyHandle);
+                out policyHandle);
 
             ThrowIfFailed(status);
 
