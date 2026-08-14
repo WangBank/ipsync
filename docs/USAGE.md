@@ -55,6 +55,12 @@ Run PowerShell as Administrator:
 
 The service name is `IpSync`.
 
+The install script configures:
+
+- Delayed automatic startup after Windows boots.
+- Service recovery that restarts the service after failures.
+- Immediate start after installation.
+
 The Windows Service account must have permission to:
 
 - Read and write `C:\Users\12243\Documents\GitHub\ipsync`.

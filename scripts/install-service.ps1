@@ -13,9 +13,21 @@ if (-not (Test-Path -LiteralPath $exePath)) {
     throw "IpSync.exe was not found in $($publishDirectory.Path). Run scripts\publish.ps1 first."
 }
 
+function Set-IpSyncServiceResilience {
+    param(
+        [string]$Name,
+        [string]$BinaryPath
+    )
+
+    & sc.exe config $Name binPath= "`"$BinaryPath`"" start= delayed-auto | Out-Host
+    & sc.exe failure $Name reset= 86400 actions= restart/60000/restart/60000/restart/60000 | Out-Host
+    & sc.exe failureflag $Name 1 | Out-Host
+}
+
 $existing = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
 if ($existing) {
-    Write-Host "Service $ServiceName already exists. Restarting it."
+    Write-Host "Service $ServiceName already exists. Updating settings and restarting it."
+    Set-IpSyncServiceResilience -Name $ServiceName -BinaryPath $exePath
     Restart-Service -Name $ServiceName -Force
     exit 0
 }
@@ -26,5 +38,6 @@ New-Service `
     -BinaryPathName "`"$exePath`"" `
     -StartupType Automatic
 
+Set-IpSyncServiceResilience -Name $ServiceName -BinaryPath $exePath
 Start-Service -Name $ServiceName
-Write-Host "Installed and started $ServiceName."
+Write-Host "Installed and started $ServiceName with delayed automatic startup and restart-on-failure recovery."
