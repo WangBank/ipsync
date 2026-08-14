@@ -1,0 +1,70 @@
+# IpSync Usage
+
+IpSync is a .NET Worker Service that can run as a Windows Service. It captures local IPv4/IPv6 addresses, external IPv4/IPv6 addresses, writes `README.md`, commits the change, and pushes it to the configured Git remote.
+
+## Configuration
+
+Edit `appsettings.json`:
+
+- `IpSync:RepositoryPath`: local Git repository path.
+- `IpSync:ReadmeFileName`: README file to update.
+- `IpSync:IntervalMinutes`: repeat interval; default is 10.
+- `IpSync:Git:Enabled`: set to `false` to only write the README without Git commit/push.
+- `IpSync:Git:RemoteName`: Git remote; default is `origin`.
+- `IpSync:Git:Branch`: optional branch name. Leave empty to use the current branch/upstream.
+
+## Connect To GitHub
+
+If this folder is not already a cloned GitHub repository, create an empty GitHub repository first, then run:
+
+```powershell
+.\scripts\setup-git.ps1 -RemoteUrl https://github.com/<owner>/ipsync.git -Branch main
+```
+
+After the first push, the service can use the configured upstream for later README updates.
+
+## Run Locally
+
+```powershell
+dotnet run
+```
+
+The development config disables Git publishing, so local runs update `README.md` without committing or pushing.
+
+To run one sync and exit:
+
+```powershell
+dotnet run -- --once
+```
+
+## Publish
+
+```powershell
+.\scripts\publish.ps1
+```
+
+The default output folder is `.\publish`.
+
+## Install As Windows Service
+
+Run PowerShell as Administrator:
+
+```powershell
+.\scripts\install-service.ps1
+```
+
+The service name is `IpSync`.
+
+The Windows Service account must have permission to:
+
+- Read and write `C:\Users\12243\Documents\GitHub\ipsync`.
+- Run `git`.
+- Use the GitHub credentials needed by `git push`.
+
+## Uninstall
+
+Run PowerShell as Administrator:
+
+```powershell
+.\scripts\uninstall-service.ps1
+```
