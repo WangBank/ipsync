@@ -62,7 +62,7 @@ public sealed class ReadmeRenderer
         builder.AppendLine();
         builder.AppendLine("- Runs once when the service starts.");
         builder.AppendLine("- Runs again every 10 minutes by default.");
-        builder.AppendLine("- Writes this README, commits it, and pushes it with the configured Git remote.");
+        builder.AppendLine("- Writes this README, commits it, and pushes it only when local network addresses change.");
 
         return builder.ToString();
     }

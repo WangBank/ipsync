@@ -8,6 +8,7 @@ Edit `appsettings.json`:
 
 - `IpSync:RepositoryPath`: local Git repository path.
 - `IpSync:ReadmeFileName`: README file to update.
+- `IpSync:StateFileName`: local state file used to remember the last local IP snapshot; default is `.ipsync-state.json`.
 - `IpSync:IntervalMinutes`: repeat interval; default is 10.
 - `IpSync:Git:Enabled`: set to `false` to only write the README without Git commit/push.
 - `IpSync:Git:RemoteName`: Git remote; default is `origin`.
@@ -29,7 +30,7 @@ After the first push, the service can use the configured upstream for later READ
 dotnet run
 ```
 
-The development config disables Git publishing, so local runs update `README.md` without committing or pushing.
+The development config disables Git publishing. `README.md` is updated only when local network IP addresses change.
 
 To run one sync and exit:
 

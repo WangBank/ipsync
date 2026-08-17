@@ -20,3 +20,8 @@ public sealed record ExternalIpAddress(
     string? Address,
     string? Source,
     string? Error);
+
+public sealed record IpSyncState(
+    string LocalAddressSignature,
+    string[] LocalAddresses,
+    DateTimeOffset LastSeenAtUtc);

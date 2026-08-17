@@ -8,6 +8,8 @@ public sealed class IpSyncOptions
 
     public string ReadmeFileName { get; set; } = "README.md";
 
+    public string StateFileName { get; set; } = ".ipsync-state.json";
+
     public int IntervalMinutes { get; set; } = 10;
 
     public GitOptions Git { get; set; } = new();

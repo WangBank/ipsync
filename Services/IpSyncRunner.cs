@@ -5,6 +5,7 @@ namespace IpSync.Services;
 
 public sealed class IpSyncRunner(
     IpAddressCollector ipAddressCollector,
+    IpStateStore ipStateStore,
     ReadmeRenderer readmeRenderer,
     GitPublisher gitPublisher,
     IOptions<IpSyncOptions> options,
@@ -20,9 +21,21 @@ public sealed class IpSyncRunner(
         logger.LogInformation("Capturing IP addresses for {RepositoryPath}", repositoryPath);
 
         Directory.CreateDirectory(repositoryPath);
+        var snapshot = await ipAddressCollector.CaptureAsync(cancellationToken);
+
+        var currentLocalSignature = ipStateStore.BuildLocalAddressSignature(snapshot.LocalAddresses);
+        var previousState = await ipStateStore.LoadAsync(repositoryPath, readmePath, cancellationToken);
+
+        if (previousState is not null &&
+            string.Equals(previousState.LocalAddressSignature, currentLocalSignature, StringComparison.Ordinal))
+        {
+            logger.LogInformation("Local IP addresses did not change; skipping README update and Git publish.");
+            await ipStateStore.SaveAsync(repositoryPath, snapshot, cancellationToken);
+            return;
+        }
+
         await gitPublisher.PullLatestAsync(repositoryPath, cancellationToken);
 
-        var snapshot = await ipAddressCollector.CaptureAsync(cancellationToken);
         var content = readmeRenderer.Render(snapshot);
 
         var tempPath = Path.Combine(repositoryPath, $".{Path.GetFileName(options.ReadmeFileName)}.tmp");
@@ -32,5 +45,6 @@ public sealed class IpSyncRunner(
         logger.LogInformation("Updated {ReadmePath}", readmePath);
 
         await gitPublisher.PublishAsync(repositoryPath, readmePath, cancellationToken);
+        await ipStateStore.SaveAsync(repositoryPath, snapshot, cancellationToken);
     }
 }

@@ -20,6 +20,7 @@ builder.Services.AddSingleton(new HttpClient
 });
 
 builder.Services.AddSingleton<IpAddressCollector>();
+builder.Services.AddSingleton<IpStateStore>();
 builder.Services.AddSingleton<ReadmeRenderer>();
 builder.Services.AddSingleton<GitPublisher>();
 builder.Services.AddSingleton<IpSyncRunner>();
