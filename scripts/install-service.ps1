@@ -203,7 +203,12 @@ if ($existing) {
 
     Write-Host "Service $ServiceName already exists. Updating settings and restarting it."
     Set-IpSyncServiceResilience -Name $ServiceName -BinaryPath $exePath
-    Restart-Service -Name $ServiceName -Force
+    if ($existing.Status -eq "Stopped") {
+        Start-Service -Name $ServiceName
+    } else {
+        Restart-Service -Name $ServiceName -Force
+    }
+
     exit 0
 }
 
