@@ -23,6 +23,7 @@ builder.Services.AddSingleton<IpAddressCollector>();
 builder.Services.AddSingleton<IpStateStore>();
 builder.Services.AddSingleton<ReadmeRenderer>();
 builder.Services.AddSingleton<GitPublisher>();
+builder.Services.AddSingleton<WebsiteHealthMonitor>();
 builder.Services.AddSingleton<IpSyncRunner>();
 
 if (!runOnce)

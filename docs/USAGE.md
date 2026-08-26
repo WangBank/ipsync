@@ -13,6 +13,11 @@ Edit `appsettings.json`:
 - `IpSync:Git:Enabled`: set to `false` to only write the README without Git commit/push.
 - `IpSync:Git:RemoteName`: Git remote; default is `origin`.
 - `IpSync:Git:Branch`: optional branch name. Leave empty to use the current branch/upstream.
+- `IpSync:WebsiteHealth:Url`: website checked after every IP capture.
+- `IpSync:WebsiteHealth:CloudflaredServiceName`: Windows service restarted when the website returns a Cloudflare 5xx error.
+- `IpSync:WebsiteHealth:RequestTimeoutSeconds`: website request timeout; a timeout is logged and does not restart the service.
+
+The website check runs every time, even when local IP addresses are unchanged. HTTP 520-530 responses, or another 5xx response identified as coming from Cloudflare, trigger a restart of the configured Cloudflared service. The IpSync service account must be allowed to stop and start that service.
 
 ## Connect To GitHub
 

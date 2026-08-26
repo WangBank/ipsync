@@ -8,6 +8,7 @@ public sealed class IpSyncRunner(
     IpStateStore ipStateStore,
     ReadmeRenderer readmeRenderer,
     GitPublisher gitPublisher,
+    WebsiteHealthMonitor websiteHealthMonitor,
     IOptions<IpSyncOptions> options,
     ILogger<IpSyncRunner> logger)
 {
@@ -22,6 +23,7 @@ public sealed class IpSyncRunner(
 
         Directory.CreateDirectory(repositoryPath);
         var snapshot = await ipAddressCollector.CaptureAsync(cancellationToken);
+        await websiteHealthMonitor.CheckAndRecoverAsync(cancellationToken);
 
         var currentLocalSignature = ipStateStore.BuildLocalAddressSignature(snapshot.LocalAddresses);
         var previousState = await ipStateStore.LoadAsync(repositoryPath, readmePath, cancellationToken);

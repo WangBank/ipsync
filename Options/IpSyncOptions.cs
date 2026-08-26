@@ -15,6 +15,8 @@ public sealed class IpSyncOptions
     public GitOptions Git { get; set; } = new();
 
     public ExternalIpEndpointsOptions ExternalIpEndpoints { get; set; } = new();
+
+    public WebsiteHealthOptions WebsiteHealth { get; set; } = new();
 }
 
 public sealed class GitOptions
@@ -37,4 +39,17 @@ public sealed class ExternalIpEndpointsOptions
     public string[] IPv4 { get; set; } = [];
 
     public string[] IPv6 { get; set; } = [];
+}
+
+public sealed class WebsiteHealthOptions
+{
+    public bool Enabled { get; set; } = true;
+
+    public string Url { get; set; } = string.Empty;
+
+    public string CloudflaredServiceName { get; set; } = "Cloudflared";
+
+    public int RequestTimeoutSeconds { get; set; } = 8;
+
+    public int ServiceOperationTimeoutSeconds { get; set; } = 30;
 }
